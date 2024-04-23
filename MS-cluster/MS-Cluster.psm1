@@ -8,6 +8,11 @@
 
 
 #MARK: Initialization of module
+if($IsWindows -eq "True"){
+}
+else{
+    throw "Not windows, Only supports windows"
+}
 if($PSEdition -ne "Desktop"){
     Write-Warning "You are using Powershell Core, The Microsoft Cluster module only works in Windows Powershell. This module will Run still but the Failoverclusters module will run in compatibily mode increasing latency!"
 }
