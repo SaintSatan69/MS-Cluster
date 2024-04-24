@@ -5,11 +5,11 @@
 Use this section to tell people about which versions of your project are
 currently being supported with security updates.
 
-| Version | Supported          |
-| ------- | ------------------ |
-| 7.4.2   | :white_check_mark: |
-| 5.1.x   | :white_check_mark: |
-| >5.1.x  | :x:                |
+| Version   | Supported          |
+| --------- | ------------------ |
+| 7.4.2     | :white_check_mark: |
+| 5.1.22621 | :white_check_mark: |
+| >5.1.x    | :x:                |
 
 
 ## Reporting a Vulnerability
@@ -17,3 +17,5 @@ currently being supported with security updates.
 Email me at micah.shonyo@outlook.com
 
 And I will get back to you as soon as possible.
+
+Otherwise Create and issue with the security bug label.
