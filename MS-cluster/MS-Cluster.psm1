@@ -1,3 +1,5 @@
+#requires -modules failoverclusters
+
 <#
     .DESCRIPTION
     This Module is for a couple handy commands for Microsoft Failover clusters that the default powershell module doesn't provide.
