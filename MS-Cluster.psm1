@@ -8,9 +8,7 @@
 
 
 #MARK: Initialization of module
-if($IsWindows -eq "True"){
-}
-else{
+if($IsWindows -ne "True"){
     throw "Not windows, Only supports windows"
 }
 try{

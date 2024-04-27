@@ -45,7 +45,7 @@
     Volume1  217502851072
 
 #>
-function Get-clusterdiskSpace{
+function Get-ClusterDiskSpace{
     [cmdletbinding()]
     param(
         [parameter(Mandatory)]
@@ -62,6 +62,7 @@ function Get-clusterdiskSpace{
     #attempts to connect to a cluster and retrive all nodes, which ever one it gets at the top of the list will have a command run on it.
     Write-Verbose "Attempting to connect to cluster $($cluster)"
     $nodes = get-clusternode -cluster $cluster -ErrorAction silentlycontinue -Verbose:$false
+    #Nodes will be null if theres an issue contacting the cluster provided.
     if($null -eq $nodes){
         throw "Failed to contact cluster $($cluster)."
     }
@@ -90,7 +91,7 @@ function Get-clusterdiskSpace{
             $space = $volume.FreeSpace
         }
         else{
-            $space = ([unint]($volume.FreeSpace) / 1024 / 1024 / 1024)
+            $space = ([unint](((($volume.FreeSpace) / 1024) / 1024) / 1024))
         }
         $obj = New-Object psobject -Property ([ordered]@{
             Volume = $volume.label
