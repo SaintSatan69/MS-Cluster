@@ -1,5 +1,3 @@
-#requires -modules failoverclusters
-
 <#
     .DESCRIPTION
     This Module is for a couple handy commands for Microsoft Failover clusters that the default powershell module doesn't provide.
@@ -15,11 +13,9 @@ if($IsWindows -eq "True"){
 else{
     throw "Not windows, Only supports windows"
 }
-if($PSEdition -ne "Desktop"){
-    Write-Warning "You are using Powershell Core, The Microsoft Cluster module only works in Windows Powershell. This module will Run still but the Failoverclusters module will run in compatibily mode increasing latency!"
-}
 try{
     if($PSEdition -ne "Desktop"){
+        Write-Warning "You are using Powershell Core, The Microsoft Cluster module only works in Windows Powershell. This module will Run still but the Failoverclusters module will run in compatibily mode increasing latency!"
         import-module failoverclusters -UseWindowsPowerShell -WarningAction SilentlyContinue
     }
     else{
