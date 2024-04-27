@@ -6,6 +6,7 @@ Testing Support: Currently None Still getting hardware.
 Current Commands:  
 Get-ClusterDiskSpace | this retrives the free space of cluster volumes.  
 Get-ClusterNodeRAM   | this retrives the free memory of all cluster nodes.  
+get-clusterNodeCPU   | this retrived the current CPU load on each cluster.
 
 ***
 

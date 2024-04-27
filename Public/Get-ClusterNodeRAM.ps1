@@ -52,21 +52,14 @@
     
             [bool]$GibiByteMode=$false
         )
-        Write-Debug "Cluster Name proviuded is $($cluster)`nAutosort Status$($autosort)`nUsername is $(((whoami).split("\"))[-1])`nUserdomain is $($env:USERDOMAIN)"
-        try{
-            Write-Verbose "Attempting connection to cluster $($cluster)"
-            #attempts to get all nodes of a cluster
-            $nodes = get-clusternode -cluster $cluster -ErrorAction silentlycontinue -Verbose:$false
-            write-debug "Nodes gathered from cluster are $($nodes.name)"
-            if($null -eq $nodes){
-                Write-Debug "Thrown Because Cluster Returned zero nodes"
-                throw
-            }
-            Write-Verbose "Connection successfull"
-        }
-        catch{
+        Write-Debug "Parameters Provided:`nClusterName:$($cluster)`nAutosort:$($autosort)`nUsername is $(((whoami).split("\"))[-1])`nUserdomain is $($env:USERDOMAIN)"
+        Write-Verbose "Attempting connection to cluster $($cluster)"
+        $nodes = get-clusternode -cluster $cluster -ErrorAction silentlycontinue -Verbose:$false
+        write-debug "Nodes gathered from cluster are $($nodes.name)"
+        if($null -eq $nodes){
             Throw "Failed to contact cluster $($cluster)"
         }
+        Write-Verbose "Connection successfull"
         #initialize some vars
         $elected_node = ""
         $finalobj = @()
@@ -78,8 +71,8 @@
             try{
                 Write-Verbose "Attempting a connection on node $($node.name)"
                 #attmps to connect to each node and using WMI gather how much free memory is available, if it fails it will only write and error and keep going
-                $mem = Invoke-Command -ComputerName $node.Name -ScriptBlock{Get-CimInstance win32_operatingsystem | Select-Object -Property Freephysicalmemory} -Verbose:$false
-                Write-Debug "Memory retived from $($node) is $($mem)"
+                $mem = Invoke-Command -verbose:$false -ComputerName $node.Name -ScriptBlock{Get-CimInstance win32_operatingsystem | Select-Object -Property Freephysicalmemory} -Verbose:$false
+                Write-Debug "Memory gathered from $($node) is $($mem)"
             }
             catch{
                 Write-Error "Failed to connect to node $($node.Name)"

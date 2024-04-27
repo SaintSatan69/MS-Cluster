@@ -45,8 +45,7 @@
     Volume1  217502851072
 
 #>
-function Get-clusterdiskSpace{
-
+function Get-ClusterDiskSpace{
     [cmdletbinding()]
     param(
         [parameter(Mandatory)]
@@ -59,25 +58,21 @@ function Get-clusterdiskSpace{
         [bool]$GibiByteMode=$false
     )
 
-    Write-Debug "`nAutosort stat is $($autosort)`nClustername provided is $($cluster)`nCluservolumlable provided is $($ClusterVolumeLable), This is optional so it may be null`nUsername is $(((whoami).split("\"))[-1])`nUserdomain is $($env:USERDOMAIN)"
+    Write-Debug "Parameters provided:`nAutosort:$($autosort)`nClustername:$($cluster)`nCluser volume label:$($ClusterVolumeLable)`nUsername is $(((whoami).split("\"))[-1])`nUserdomain is $($env:USERDOMAIN)"
     #attempts to connect to a cluster and retrive all nodes, which ever one it gets at the top of the list will have a command run on it.
-    try{
-        Write-Verbose "Attempting to connect to cluster $($cluster)"
-        $nodes = get-clusternode -cluster $cluster -ErrorAction silentlycontinue -Verbose:$false
-        if($null -eq $nodes){
-            Throw
-        }
-        $node = ($nodes[0]).Name
-        write-debug "Nodes gathered from cluster are $($nodes) Node elected for gathering volume information is $($node)"
-        Write-Verbose "Connection Sucess! Node:$($node) has been selected"
+    Write-Verbose "Attempting to connect to cluster $($cluster)"
+    $nodes = get-clusternode -cluster $cluster -ErrorAction silentlycontinue -Verbose:$false
+    #Nodes will be null if theres an issue contacting the cluster provided.
+    if($null -eq $nodes){
+        throw "Failed to contact cluster $($cluster)."
     }
-    catch{
-        throw "Failed to contact cluster $($cluster), Verify Network connectivity and security permissons."
-    }
+    $node = ($nodes[0]).Name
+    write-debug "Nodes gathered from cluster are $($nodes) Node elected for gathering volume information is $($node)"
+    Write-Verbose "Connection Sucess! Node:$($node) has been selected"
     try{
         Write-Debug "Invoking command on node $($node)"
         #runs a command one that node that uses WMI to retrive the amount of free space on any volume that contains the lable for clustered volumes or any volume formatted into the cluster file system
-        $volumes = Invoke-Command -ComputerName $node -ScriptBlock {Get-CimInstance win32_volume | Where-Object {($_.label -like "*$ClusterVolumeLable*") -or ($_.Filesystem -like "CSVFS*")} | Select-Object Label,FreeSpace} -Verbose:$false
+        $volumes = Invoke-Command -verbose:$false -ComputerName $node -ScriptBlock {Get-CimInstance win32_volume | Where-Object {($_.label -like "*$ClusterVolumeLable*") -or ($_.Filesystem -like "CSVFS*")} | Select-Object Label,FreeSpace} -Verbose:$false
         Write-Verbose "Connected to Node $($node) and have gathered cluster volume information"
     }
     catch{
@@ -96,7 +91,7 @@ function Get-clusterdiskSpace{
             $space = $volume.FreeSpace
         }
         else{
-            $space = ([unint]($volume.FreeSpace) / 1024 / 1024 / 1024)
+            $space = ([unint](((($volume.FreeSpace) / 1024) / 1024) / 1024))
         }
         $obj = New-Object psobject -Property ([ordered]@{
             Volume = $volume.label
