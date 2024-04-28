@@ -102,7 +102,7 @@
             if($mem.Freephysicalmemory -gt $free_mem){
                 write-debug "Node $($node.name) has more free then current max $($free_mem)"
                 $elected_node = $node.Name
-                $free_mem = ([uint](($mem.Freephysicalmemory) / 1024) / 1024)
+                $free_mem = ([uint32](($mem.Freephysicalmemory) / 1024) / 1024)
             }
         }
         write-debug "Object dump $($finalobj)"
