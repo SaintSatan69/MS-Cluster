@@ -23,20 +23,28 @@ function Restart-ClusterNode {
 
         [bool]$serialmode=$true
     )
+    Write-Debug "Parameters Provided$($node)`nPipelined:$([bool]$($Null -eq $inputobject))`nAwaitAlive:$($awaitalive)`nWaitTime:$($waittime) Mins`nTime Between Pings:$($timebetweenpings)`nSerialMode:$($serialmode)"
     $awaitvalue = $null
     if($null -eq $inputobject){
+        write-debug "Not Pipelined Node is $($node)"
+        Write-Verbose "Testing Connection on $($node)"
         $alive = Test-NetConnection -ComputerName $node
+        Write-Debug "Connection Status ping:$($alive.pingsucceeded)"
         if($alive.pingsucceeded -eq $true){
+            Write-Verbose "Sending Reboot to $($node)"
             Restart-Computer -ComputerName $node
+            Write-Verbose "Reboot Sent!"
         }
         else{
             throw "Unable to resolve Node $($node)"
         }
         write-host "Restart Command send to $($node)"
         if($awaitalive -eq $true){
+            Write-Verbose "Waitalive was enabled we are waiting $($waittime) Minutes for it to complete its shutdown before testing its connection over and over!"
             $count = 0
             start-sleep -Seconds ($waittime * 60)
             while(($null -eq $awaitvalue) -or ($awaitvalue.pingsucceeded -ne "True")){
+                Write-Debug "Run $($count) starting last ones status is $($awaitvalue.pingsucceeded)"
                 $awaitvalue = Test-NetConnection -ComputerName $node
                 $count++
                 Start-Sleep -Seconds $timebetweenpings
@@ -45,12 +53,16 @@ function Restart-ClusterNode {
         }
     }
     else{
+        Write-Debug "In Pipeline Mode, With serial mode:$($serialmode), Powershell editon $($PSEdition) PS major Version $($PSVersionTable.PSVersion.ToString()[0])"
         if($serialmode -eq $true){
+            Write-Verbose "Serial processing starting!"
             foreach($node in $inputobject){
                 $nodename = $null
                 $nodeName = $node.Name
+                Write-Verbose "Processing $($nodename), we are checking for a heartbeat"
                 $alive = Test-NetConnection -ComputerName $nodename
                 if($alive.pingsucceeded -eq $true){
+                    write-debug "Node $($nodename) is alive sending reboot."
                     Restart-Computer -ComputerName $nodename
                 }
                 else{
@@ -58,9 +70,11 @@ function Restart-ClusterNode {
                 }
                 write-host "Restart Command send to $($nodename)"
                 if($awaitalive -eq $true){
+                    write-verbose "Awaitalive is Active, waiting on node $($nodename)"
                     $count = 0
                     start-sleep -Seconds ($waittime * 60)
                     while(($null -eq $awaitvalue) -or ($awaitvalue -ne "True")){
+                        write-debug "Count: $($count) last ping status $($awaitalive.pingsucceeded)"
                         $awaitvalue = Test-NetConnection -ComputerName $node
                         $count++
                         Start-Sleep -Seconds $timebetweenpings
@@ -70,11 +84,16 @@ function Restart-ClusterNode {
             }
             Write-Output "Reboots all sent"
         }else{
+            Write-Verbose "Parallel processing starting!`nChecking Functionality support for mode!!!"
             if(($PSEdition -eq "Core") -and ([UInt32]($PSVersionTable.PSVersion.ToString()[0]) -ge 7)){
+                Write-Debug "Parallel is supported in current version`n Sending mass reboot."
                 restart-computer -ComputerName $inputobject.name
                 write-output "Restarts sent to $($inputobject.name)"
                 if($awaitalive -eq $true){
+                    write-debug "Await alive is enabled, With parallel mode Prepare for CPU & RAM to be consumed."
+                    Write-Warning "Parallel mode will spawn several sub-process pwsh's and is taxing on the computer!!!"
                     $inputobject.name | % -Parallel {
+                        Write-Debug "Hyper Parallel Activated!, handling node $($_)"
                         $count = 0
                         start-sleep -Seconds ($using:waittime * 60)
                         while(($null -eq $using:awaitvalue) -or ($awaitvalue -ne "True")){
@@ -86,6 +105,7 @@ function Restart-ClusterNode {
                     }
                 }
             }else{
+                Write-Debug "Attempted to use parallel in unsupported version"
                 throw "Parallel only works in PS7"
             }
         }
