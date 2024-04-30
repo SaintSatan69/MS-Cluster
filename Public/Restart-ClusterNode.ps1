@@ -2,7 +2,23 @@
     .SYNOPSIS
     Connects to the provided node(s) and tells it to completely restart
 
+    .PARAMETER node
+    For a single node you specify this parameter to reboot it will not work if you send an input object.
 
+    .PARAMETER inputobject
+    Supporting pipeline input, specifying this opens up 2 more parameters.
+
+    .PARAMETER awaitalive
+    Defaults to $true, if turned off will not keep pinging the host until it comes back online requires ICMP incoming through the firewalls.
+
+    .PARAMETER waittime
+    Defaults to 5, this is how many minutes the command will wait for the host to completely stop everything before it begins the awaitalive loops.
+
+    .PARAMETER timebetweenpings
+    Defaults to 10, this is how many seconds between pings in the awaitalive loop as to not overload the script/network.
+
+    .PARAMETER serialmode
+    When input/pipeline input is provided you can switch between serial which processes each node one by one or in parallel mode, Parallel requires PS7 and is more taxing on compute.
 #>
 function Restart-ClusterNode {
     [CmdletBinding(SupportsShouldProcess=$true)]
