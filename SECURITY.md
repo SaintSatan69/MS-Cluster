@@ -8,6 +8,11 @@
 | 5.1.22621 | :white_check_mark: |
 | <5.1.x    | :x:                |
 
+| OS        | Supported          |
+| --------- | ------------------ |
+| Windows   | :white_check_mark: |
+| Linux     | :x:                |
+| MacOS     | :x:                |
 
 ## Reporting a Vulnerability
 
