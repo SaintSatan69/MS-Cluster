@@ -13,10 +13,10 @@
         A required parameter to point the cmdlets to the clusters virtual network name account in AD.
 
         .PARAMETER autosort
-        Optional parameter that defaults to $false, If true will sort the return object in order of free memory.
+        Optional Switch, when supplied will sort the return object in order of free memory.
 
         .PARAMETER GibiByteMode
-        Optional parameter that defaults to $false, If true will covert the memory from KiBibytes to GiBiBytes.
+        Optional Switch, when supplied will covert the memory from KiBibytes to GiBiBytes.
 
         .INPUTS
         Doesn't Support pipeline inputs.
@@ -48,9 +48,9 @@
             [parameter(Mandatory)]
             [string]$cluster,
     
-            [bool]$autosort=$false,
+            [switch]$autosort,
     
-            [bool]$GibiByteMode=$false
+            [switch]$GibiByteMode
         )
         Write-Debug "Parameters Provided:`nClusterName:$($cluster)`nAutosort:$($autosort)`nUsername is $(((whoami).split("\"))[-1])`nUserdomain is $($env:USERDOMAIN)"
         Write-Verbose "Attempting connection to cluster $($cluster)"
@@ -84,7 +84,7 @@
                 else{
                     $memory = ([unint]($mem) / 1024 / 1024)
                 }
-                $obj = New-Object -Property ([ordered]@{
+                $obj = New-Object psobject -Property ([ordered]@{
                     Node = $node.Name
                     Memory = $memory
                 })
@@ -106,12 +106,14 @@
             }
         }
         write-debug "Object dump $($finalobj)"
-        Write-Verbose "Node $($elected_node) Has the most free memory at $($Free_mem)GiBi"
+        Write-Verbose "Node $($elected_node) Has the most free memory at $($Free_mem)GiBi"\
+        $global:MemoryFreeNode = $elected_node
+        $global:MemoryFreeNode | out-null
         if($autosort -eq $false){
             return $finalobj
         }
         else{
-            return ($finalobj | Sort-Object -Property Memory -Descending:$false)
+            return ($finalobj | Sort-Object -Property Memory -Descending:$true)
         }
     
     }

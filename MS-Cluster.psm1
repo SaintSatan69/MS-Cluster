@@ -8,7 +8,8 @@
 
 
 #MARK: Initialization of module
-
+$Global:MemoryFreeNode = $null
+$Global:Volumefree = $null
 try{
     if($PSEdition -ne "Desktop"){
         if($IsWindows -ne "True"){
@@ -33,6 +34,8 @@ Get-ChildItem -Path "$PSScriptRoot\Public\*.ps1" | ForEach-Object {
 }
 $onremovescript = {
     remove-module FailoverClusters -ErrorAction SilentlyContinue
+    Remove-Variable MemoryFreeNode -Scope global
+    Remove-Variable Volumefree -Scope global
     Write-Output "Module Cleanup Complete."
 }
 $ExecutionContext.SessionState.Module.OnRemove += $OnRemoveScript

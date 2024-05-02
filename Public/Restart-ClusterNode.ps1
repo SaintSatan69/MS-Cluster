@@ -9,7 +9,7 @@
     Supporting pipeline input, specifying this opens up 2 more parameters.
 
     .PARAMETER awaitalive
-    Defaults to $true, if turned off will not keep pinging the host until it comes back online requires ICMP incoming through the firewalls.
+    Switch Param specifying it will cause the function to keep pinging the host until it comes back online requires ICMP incoming through the firewalls.
 
     .PARAMETER waittime
     Defaults to 5, this is how many minutes the command will wait for the host to completely stop everything before it begins the awaitalive loops.
@@ -19,6 +19,9 @@
 
     .PARAMETER serialmode
     When input/pipeline input is provided you can switch between serial which processes each node one by one or in parallel mode, Parallel requires PS7 and is more taxing on compute.
+
+    .INPUTS
+    [system.array] or [system.object], these can be piped into the function for parallel mode.
 #>
 function Restart-ClusterNode {
     [CmdletBinding(SupportsShouldProcess=$true)]
@@ -26,12 +29,11 @@ function Restart-ClusterNode {
         [string]$node,
 
         [parameter(
-            ValueFromPipeline=$true,
-            ValueFromPipelineByPropertyName=$true
+            ValueFromPipeline=$true
         )]
         [system.array]$inputobject,
 
-        [bool]$awaitalive=$true,
+        [switch]$awaitalive,
 
         [Uint32]$waittime=5,
 
@@ -39,6 +41,7 @@ function Restart-ClusterNode {
 
         [bool]$serialmode=$true
     )
+    #MARK: Restart-ClusterNode
     Write-Debug "Parameters Provided$($node)`nPipelined:$([bool]$($Null -eq $inputobject))`nAwaitAlive:$($awaitalive)`nWaitTime:$($waittime) Mins`nTime Between Pings:$($timebetweenpings)`nSerialMode:$($serialmode)"
     $awaitvalue = $null
     if($null -eq $inputobject){

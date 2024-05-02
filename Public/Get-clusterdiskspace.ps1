@@ -17,10 +17,10 @@
     Optional parameter for the script to look for volumes that don't have the CSVFS file system of clusters that are used by the cluster.
 
     .PARAMETER autosort
-    Optional parameter that defaults to $false, If true will sort the return object in order of free space.
+    Optional Switch, when supplied will sort the return object in order of free space.
 
     .PARAMETER GibiByteMode
-    Optional parameter that defaults to $false, IF true will convert the capacity into GibiBytes instead of Bytes
+    Optional switch, when supplied will convert the capacity into GibiBytes instead of Bytes
 
     .INPUTS
     Doesn't Support pipeline inputs.
@@ -53,9 +53,9 @@ function Get-ClusterDiskSpace{
 
         [string]$ClusterVolumeLable,
 
-        [bool]$autosort=$false,
+        [switch]$autosort,
 
-        [bool]$GibiByteMode=$false
+        [switch]$GibiByteMode
     )
 
     Write-Debug "Parameters provided:`nAutosort:$($autosort)`nClustername:$($cluster)`nCluser volume label:$($ClusterVolumeLable)`nUsername is $(((whoami).split("\"))[-1])`nUserdomain is $($env:USERDOMAIN)"
@@ -106,13 +106,15 @@ function Get-ClusterDiskSpace{
     }
     Write-Debug "Object Dump $($fullobj)"
     Write-verbose "Volume $($most_free_volume) is the most free at $([uint32]((($max_size_rem / 1024) / 1024) / 1024))GiB"
+    $Global:Volumefree = $most_free_volume
+    $Global:Volumefree | out-null
     if($autosort -eq $false){
         Write-Debug "No Autosort"
         return $fullobj
     }
     else {
         Write-Debug "Autosort Enabled"
-        return ($fullobj | Sort-Object -Property FreeSpace -Descending:$false)
+        return ($fullobj | Sort-Object -Property FreeSpace -Descending:$true)
     }
 
 }
