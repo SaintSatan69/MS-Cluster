@@ -72,10 +72,11 @@ function Get-ClusterDiskSpace{
     try{
         Write-Debug "Invoking command on node $($node)"
         #runs a command one that node that uses WMI to retrive the amount of free space on any volume that contains the lable for clustered volumes or any volume formatted into the cluster file system
-        $volumes = Invoke-Command -verbose:$false -ComputerName $node -ScriptBlock {Get-CimInstance win32_volume | Where-Object {($_.label -like "*$ClusterVolumeLable*") -or ($_.Filesystem -like "CSVFS*")} | Select-Object Label,FreeSpace} -Verbose:$false
+        $volumes = Invoke-Command -ComputerName $node -ScriptBlock {Get-CimInstance win32_volume | Where-Object {($_.label -like "*$ClusterVolumeLable*") -or ($_.Filesystem -like "CSVFS*")} | Select-Object Label,FreeSpace} -Verbose:$false
         Write-Verbose "Connected to Node $($node) and have gathered cluster volume information"
     }
     catch{
+        Write-Verbose "$($_)"
         Write-Debug "Node connection FAILURE"
         throw "Failed to connect to node $($node) to gather volume information, Verify Network connectivity and security permissons."
     }
@@ -91,7 +92,7 @@ function Get-ClusterDiskSpace{
             $space = $volume.FreeSpace
         }
         else{
-            $space = ([unint](((($volume.FreeSpace) / 1024) / 1024) / 1024))
+            $space = ([uint32](((($volume.FreeSpace) / 1024) / 1024) / 1024))
         }
         $obj = New-Object psobject -Property ([ordered]@{
             Volume = $volume.label

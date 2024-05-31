@@ -37,7 +37,7 @@ function Get-ClusterNodeCPU{
     foreach($node in $nodes){
         $cpu_load = $null
         Write-Verbose "Attempting Connection with Node $($node.name)"
-        $cpu_load = Invoke-Command -Verbose:$false -ComputerName $node.Name -ScriptBlock {([Math]::Round(((Get-Counter ‘\Processor(_Total)\% Processor Time’).CounterSamples.CookedValue),2))}
+        $cpu_load = Invoke-Command -Verbose:$false -ComputerName $node.Name -ScriptBlock {([Math]::Round(((Get-Counter "\Processor(_Total)\% Processor Time").CounterSamples.CookedValue),2))}
         if($null -eq $cpu_load){
             Write-Error "Failed to contact node $($node.name) Verify Network connectivity."
         }else{
