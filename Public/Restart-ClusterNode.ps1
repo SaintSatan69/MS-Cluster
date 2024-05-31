@@ -111,7 +111,7 @@ function Restart-ClusterNode {
                 if($awaitalive -eq $true){
                     write-debug "Await alive is enabled, With parallel mode Prepare for CPU & RAM to be consumed."
                     Write-Warning "Parallel mode will spawn several sub-process pwsh's and is taxing on the computer!!!"
-                    $inputobject.name | % -Parallel {
+                    $inputobject.name | foreach-object -Parallel {
                         Write-Debug "Hyper Parallel Activated!, handling node $($_)"
                         $count = 0
                         start-sleep -Seconds ($using:waittime * 60)
