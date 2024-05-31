@@ -8,11 +8,13 @@
 
 
 #MARK: Initialization of module
-if($IsWindows -ne "True"){
-    throw "Not windows, Only supports windows"
-}
+$Global:MemoryFreeNode = $null
+$Global:Volumefree = $null
 try{
     if($PSEdition -ne "Desktop"){
+        if($IsWindows -ne "True"){
+            throw "Not windows, Only supports windows"
+        }
         Write-Warning "You are using Powershell Core, The Microsoft Cluster module only works in Windows Powershell. This module will Run still but the Failoverclusters module will run in compatibily mode increasing latency!"
         import-module failoverclusters -UseWindowsPowerShell -WarningAction SilentlyContinue
     }
@@ -32,6 +34,8 @@ Get-ChildItem -Path "$PSScriptRoot\Public\*.ps1" | ForEach-Object {
 }
 $onremovescript = {
     remove-module FailoverClusters -ErrorAction SilentlyContinue
+    Remove-Variable MemoryFreeNode -Scope global
+    Remove-Variable Volumefree -Scope global
     Write-Output "Module Cleanup Complete."
 }
 $ExecutionContext.SessionState.Module.OnRemove += $OnRemoveScript

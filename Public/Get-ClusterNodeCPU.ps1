@@ -9,7 +9,7 @@
     This is the name of the cluster to connect to, it is required.
 
     .PARAMETER autosort
-    Will sort by the cpuloads in decending order.
+    Optional Switch, when supplied will cpuloads in decending order.
 
     .INPUTS
     Doesn't except pipeline inputs.
@@ -23,7 +23,7 @@ function Get-ClusterNodeCPU{
         [parameter(Mandatory)]
         [string]$cluster,
 
-        [bool]$autosort
+        [switch]$autosort
     )
     $cpuloads = @()
     Write-Debug "Parameters Provided`nCluster: $($cluster)`nAutosort: $($autosort)`nUsername is $(((whoami).split("\"))[-1])`nUserdomain is $($env:USERDOMAIN)"
@@ -37,7 +37,7 @@ function Get-ClusterNodeCPU{
     foreach($node in $nodes){
         $cpu_load = $null
         Write-Verbose "Attempting Connection with Node $($node.name)"
-        $cpu_load = Invoke-Command -Verbose:$false -ComputerName $node.Name -ScriptBlock {([Math]::Round(((Get-Counter ‘\Processor(_Total)\% Processor Time’).CounterSamples.CookedValue),2))}
+        $cpu_load = Invoke-Command -Verbose:$false -ComputerName $node.Name -ScriptBlock {([Math]::Round(((Get-Counter "\Processor(_Total)\% Processor Time").CounterSamples.CookedValue),2))}
         if($null -eq $cpu_load){
             Write-Error "Failed to contact node $($node.name) Verify Network connectivity."
         }else{
@@ -54,6 +54,6 @@ function Get-ClusterNodeCPU{
         return $cpuloads
     }
     else{
-        return ($cpuloads | Sort-Object -Property CPU_load -Descending:$false)
+        return ($cpuloads | Sort-Object -Property CPU_load -Descending:$true)
     }
 }

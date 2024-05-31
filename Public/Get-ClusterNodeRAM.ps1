@@ -13,10 +13,10 @@
         A required parameter to point the cmdlets to the clusters virtual network name account in AD.
 
         .PARAMETER autosort
-        Optional parameter that defaults to $false, If true will sort the return object in order of free memory.
+        Optional Switch, when supplied will sort the return object in order of free memory.
 
         .PARAMETER GibiByteMode
-        Optional parameter that defaults to $false, If true will covert the memory from KiBibytes to GiBiBytes.
+        Optional Switch, when supplied will covert the memory from KiBibytes to GiBiBytes.
 
         .INPUTS
         Doesn't Support pipeline inputs.
@@ -34,7 +34,7 @@
         Node3       15887654
 
         .EXAMPLE
-        PS> get-clusterNodeRAM -cluster Production-fc -autosort:$true -debug
+        PS> get-clusterNodeRAM -cluster Production-fc -autosort -debug
         DEBUG:<debugging messages>
         Node        FreePhysicalMemory
         ------      ------------------
@@ -48,9 +48,9 @@
             [parameter(Mandatory)]
             [string]$cluster,
     
-            [bool]$autosort=$false,
+            [switch]$autosort,
     
-            [bool]$GibiByteMode=$false
+            [switch]$GibiByteMode
         )
         Write-Debug "Parameters Provided:`nClusterName:$($cluster)`nAutosort:$($autosort)`nUsername is $(((whoami).split("\"))[-1])`nUserdomain is $($env:USERDOMAIN)"
         Write-Verbose "Attempting connection to cluster $($cluster)"
@@ -71,11 +71,12 @@
             try{
                 Write-Verbose "Attempting a connection on node $($node.name)"
                 #attmps to connect to each node and using WMI gather how much free memory is available, if it fails it will only write and error and keep going
-                $mem = Invoke-Command -verbose:$false -ComputerName $node.Name -ScriptBlock{Get-CimInstance win32_operatingsystem | Select-Object -Property Freephysicalmemory} -Verbose:$false
+                $mem = (Invoke-Command -ComputerName $node.Name -ScriptBlock{Get-CimInstance win32_operatingsystem | Select-Object -Property Freephysicalmemory} -Verbose:$false).FreePhysicalMemory
                 Write-Debug "Memory gathered from $($node) is $($mem)"
             }
             catch{
                 Write-Error "Failed to connect to node $($node.Name)"
+                Write-Verbose "$($_)"
             }
             if($null -ne $mem){
                 if($GibiByteMode -eq $false){
@@ -84,34 +85,36 @@
                 else{
                     $memory = ([unint]($mem) / 1024 / 1024)
                 }
-                $obj = New-Object -Property ([ordered]@{
+                $obj = New-Object psobject -Property ([ordered]@{
                     Node = $node.Name
                     Memory = $memory
                 })
             }
             else{
-                Write-Warning "At least 1 node unable to retrive memory information, there will be a NULL in output object for which ever node failed"
+                Write-Warning "At least 1 node unable to retrive memory information, there will be a empty string in the memory section of the output object for which ever node failed"
                 $obj = new-object -Property ([ordered]@{
                     Node = $node.name
-                    Memory = $null
+                    Memory = ""
                 })
             }
             $finalobj += $obj
             #this determins which node has the most free memory so that in the future if your making roles on a cluster you know which one can support it the most.
             Write-Verbose "Gathering Node with the most free memory"
-            if($mem.Freephysicalmemory -gt $free_mem){
+            if([uint32]((([uint32]$mem) / 1024) / 1024) -gt [uint32]$free_mem){
                 write-debug "Node $($node.name) has more free then current max $($free_mem)"
                 $elected_node = $node.Name
-                $free_mem = ([uint](($mem.Freephysicalmemory) / 1024) / 1024)
+                $free_mem = [uint32]((($mem) / 1024) / 1024)
             }
         }
         write-debug "Object dump $($finalobj)"
         Write-Verbose "Node $($elected_node) Has the most free memory at $($Free_mem)GiBi"
+        $global:MemoryFreeNode = $elected_node
+        $global:MemoryFreeNode | out-null
         if($autosort -eq $false){
             return $finalobj
         }
         else{
-            return ($finalobj | Sort-Object -Property Memory -Descending:$false)
+            return ($finalobj | Sort-Object -Property Memory -Descending:$true)
         }
     
     }

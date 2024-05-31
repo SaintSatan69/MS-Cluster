@@ -70,13 +70,13 @@ Description = 'A few CMDlets for Microsoft Failover Clusters'
 # NestedModules = @()
 
 # Functions to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no functions to export.
-FunctionsToExport = 'Get-ClusterDiskSpace', 'Get-ClusterNodeRAM', 'Get-ClusterNodeCPU'
+FunctionsToExport = 'Get-ClusterDiskSpace', 'Get-ClusterNodeRAM', 'Get-ClusterNodeCPU', 'Restart-ClusterNode'
 
 # Cmdlets to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no cmdlets to export.
 CmdletsToExport = ''
 
 # Variables to export from this module
-VariablesToExport = ''
+VariablesToExport = 'Volumefree','MemoryFreeNode'
 
 # Aliases to export from this module, for best performance, do not use wildcards and do not delete the entry, use an empty array if there are no aliases to export.
 AliasesToExport = ''

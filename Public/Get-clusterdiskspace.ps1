@@ -17,10 +17,10 @@
     Optional parameter for the script to look for volumes that don't have the CSVFS file system of clusters that are used by the cluster.
 
     .PARAMETER autosort
-    Optional parameter that defaults to $false, If true will sort the return object in order of free space.
+    Optional Switch, when supplied will sort the return object in order of free space.
 
     .PARAMETER GibiByteMode
-    Optional parameter that defaults to $false, IF true will convert the capacity into GibiBytes instead of Bytes
+    Optional switch, when supplied will convert the capacity into GibiBytes instead of Bytes
 
     .INPUTS
     Doesn't Support pipeline inputs.
@@ -53,9 +53,9 @@ function Get-ClusterDiskSpace{
 
         [string]$ClusterVolumeLable,
 
-        [bool]$autosort=$false,
+        [switch]$autosort,
 
-        [bool]$GibiByteMode=$false
+        [switch]$GibiByteMode
     )
 
     Write-Debug "Parameters provided:`nAutosort:$($autosort)`nClustername:$($cluster)`nCluser volume label:$($ClusterVolumeLable)`nUsername is $(((whoami).split("\"))[-1])`nUserdomain is $($env:USERDOMAIN)"
@@ -72,10 +72,11 @@ function Get-ClusterDiskSpace{
     try{
         Write-Debug "Invoking command on node $($node)"
         #runs a command one that node that uses WMI to retrive the amount of free space on any volume that contains the lable for clustered volumes or any volume formatted into the cluster file system
-        $volumes = Invoke-Command -verbose:$false -ComputerName $node -ScriptBlock {Get-CimInstance win32_volume | Where-Object {($_.label -like "*$ClusterVolumeLable*") -or ($_.Filesystem -like "CSVFS*")} | Select-Object Label,FreeSpace} -Verbose:$false
+        $volumes = Invoke-Command -ComputerName $node -ScriptBlock {Get-CimInstance win32_volume | Where-Object {($_.label -like "*$ClusterVolumeLable*") -or ($_.Filesystem -like "CSVFS*")} | Select-Object Label,FreeSpace} -Verbose:$false
         Write-Verbose "Connected to Node $($node) and have gathered cluster volume information"
     }
     catch{
+        Write-Verbose "$($_)"
         Write-Debug "Node connection FAILURE"
         throw "Failed to connect to node $($node) to gather volume information, Verify Network connectivity and security permissons."
     }
@@ -91,7 +92,7 @@ function Get-ClusterDiskSpace{
             $space = $volume.FreeSpace
         }
         else{
-            $space = ([unint](((($volume.FreeSpace) / 1024) / 1024) / 1024))
+            $space = ([uint32](((($volume.FreeSpace) / 1024) / 1024) / 1024))
         }
         $obj = New-Object psobject -Property ([ordered]@{
             Volume = $volume.label
@@ -106,13 +107,15 @@ function Get-ClusterDiskSpace{
     }
     Write-Debug "Object Dump $($fullobj)"
     Write-verbose "Volume $($most_free_volume) is the most free at $([uint32]((($max_size_rem / 1024) / 1024) / 1024))GiB"
+    $Global:Volumefree = $most_free_volume
+    $Global:Volumefree | out-null
     if($autosort -eq $false){
         Write-Debug "No Autosort"
         return $fullobj
     }
     else {
         Write-Debug "Autosort Enabled"
-        return ($fullobj | Sort-Object -Property FreeSpace -Descending:$false)
+        return ($fullobj | Sort-Object -Property FreeSpace -Descending:$true)
     }
 
 }
