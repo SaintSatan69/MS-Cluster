@@ -1,9 +1,13 @@
 $Global:ErrorActionPreference = 'Stop'
 $Global:VerbosePreference = 'SilentlyContinue'
+$major = read-host "Enter Major Version:"
+$minor = read-host "Enter Minor Version:"
+$patch = read-host "Enter Patch Version"
 
-$buildVersion = $env:BUILDVER
-$manifestPath = "./ms-cluster.psd1"
-$publicFuncFolderPath = './public'
+$buildVersion = "$major" + "." + "$minor" + "." + "$patch"
+
+$manifestPath = "..\ms-cluster.psd1"
+$publicFuncFolderPath = '..\public'
 
 
 if (!(Get-PackageProvider | Where-Object { $_.Name -eq 'NuGet' })) {
